@@ -5,52 +5,54 @@ public class Node
     #region InEditorVariables
     #endregion
 
-    public float Mass;
-    public float Density;
-    public float Damping;
-    public float Stiffnes;//for parse in tetraedros
-    public bool Fixed;
-    public PhysicsManager Manager;
+    public float mass;
+    public float density;
+    public float damping;
+    public float stiffness;
+    public bool isFixed;
+    public PhysicsManager physicManager;
 
-    public Vector3 Pos;
-    public Vector3 Vel;
-    public Vector3 Force;
+    public Vector3 position;
+    public Vector3 velocity;
+    public Vector3 force;
     private GameObject sphere;
     private float sphereRadius;
+    public int nodeId;
 
 
 
     // Use this for initialization in fabrics (mass)
-    public Node(Vector3 vertexPos, PhysicsManager physicsManager, float newMass, float newDampingRelativeToMass, bool isFixed, SimulatedObject.DebugDrawType debugDraw)
+    public Node(Vector3 position_, PhysicsManager physicsManager_, float mass_, float damping_, bool isFixed_, SimulatedObject.DebugDrawType debugDraw)
     {
-        Mass = newMass;
-        sphereRadius = 0.2f;
-        createNode(vertexPos, physicsManager, newDampingRelativeToMass, isFixed, debugDraw);
+        this.mass = mass_;
+        this.sphereRadius = 0.2f;
+        createNode(position_, physicsManager_, damping_, isFixed_, debugDraw);
     }
 
-    // Use this for initialization in tetraedros (density)
-    public Node(Vector3 vertexPos, PhysicsManager physicsManager, float newDensity, float newDampingRelativeToMass, bool isFixed, SimulatedObject.DebugDrawType debugDraw, float auxiliarStiffnes)
+    // Use this for initialization in tetrahedrons (density)
+    public Node(Vector3 position_, PhysicsManager physicsManager_, float density_, float damping_, bool isFixed_, SimulatedObject.DebugDrawType debugDraw, float stiffness_)
     {
-        Density = newDensity;
-        Mass = 0.0f;
-        Stiffnes = auxiliarStiffnes;
-        sphereRadius = 80.0f;
-        createNode(vertexPos, physicsManager, newDampingRelativeToMass, isFixed, debugDraw);
+        this.density = density_;
+        this.mass = 0.0f;
+        this.stiffness = stiffness_;
+        this.sphereRadius = 80.0f;
+        createNode(position_, physicsManager_, damping_, isFixed_, debugDraw);
     }
 
-    //Auxiliar method for initialices springs in both cases
-    private void createNode(Vector3 vertexPos, PhysicsManager physicsManager, float newDampingRelativeToMass, bool isFixed, SimulatedObject.DebugDrawType debugDraw)
+    //Auxiliary method for initialices springs in both cases
+    private void createNode(Vector3 position_, PhysicsManager physicsManager_, float damping_, bool isFixed_, SimulatedObject.DebugDrawType debugDraw)
     {
-        Pos = vertexPos;
-        Manager = physicsManager;
-        Vel = Force = Vector3.zero;
-        Fixed = isFixed;
-        Damping = newDampingRelativeToMass;
-        if (debugDraw == SimulatedObject.DebugDrawType.Instantiate)
+        this.position = position_;
+        this.physicManager = physicsManager_;
+        this.nodeId = ++this.physicManager.totalNodes;
+        this.velocity = this.force = Vector3.zero;
+        this.isFixed = isFixed_;
+        this.damping = damping_;
+        if (debugDraw == SimulatedObject.DebugDrawType.GAME_OBJECTS)
         {
-            sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            sphere.transform.localScale = new Vector3(sphereRadius, sphereRadius, sphereRadius);
-            sphere.name = "nodo " + Pos;
+            this.sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+            this.sphere.transform.localScale = new Vector3(this.sphereRadius, this.sphereRadius, this.sphereRadius);
+            this.sphere.name = "node-" + this.nodeId.ToString("00000");
             debugDrawing();
         }
     }
@@ -58,24 +60,24 @@ public class Node
     //Updates the debug sphere
     public void debugDrawing()
     {
-        sphere.transform.position = this.Pos;
+        this.sphere.transform.position = this.position;
     }
 
     //Creates the debug gizmos
     public void debugGizmos()
     {
-        Gizmos.DrawSphere(this.Pos, this.sphereRadius);
+        Gizmos.DrawSphere(this.position, this.sphereRadius);
     }
 
     //Add gravity force and checks if its in a collision
-    public void ComputeForces()
+    public void computeForces()
     {
-        Force += Mass * (Manager.Gravity - Vel * Damping);
-        if (Manager.collisionZones.Count > 0)
+        this.force += this.mass * (this.physicManager.gravity - this.velocity * this.damping);
+        if (physicManager.collisionZones.Count > 0)
         {
-            foreach (CollisionZone colZone in Manager.collisionZones)
+            foreach (CollisionZone colZone in this.physicManager.collisionZones)
             {
-                Force += colZone.calculatePenaltyForce(this.Pos);
+                this.force += colZone.calculatePenaltyForce(this.position);
             }
         }
     }

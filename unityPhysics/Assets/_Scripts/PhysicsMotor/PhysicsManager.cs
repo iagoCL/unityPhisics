@@ -1,49 +1,42 @@
 ﻿using UnityEngine;
 using System.Collections.Generic;
 
-/// <summary>
-/// Basic physics manager capable of simulating a given ISimulable
-/// implementation using diverse integration methods: explicit,
-/// implicit, Verlet and semi-implicit.
-/// </summary>
 public class PhysicsManager : MonoBehaviour
 {
     #region InEditorVariables
-    public bool Paused;
-    public float TimeStep;
-    public Vector3 Gravity;
-    public Integration IntegrationMethod;
+    public bool paused;
+    public float deltaTime;
+    public Vector3 gravity;
+    public Integration integrationMethod;
     public List<SimulatedObject> simulatedObjects;
     public List<CollisionZone> collisionZones;
-    public List<propertiesDefineZone> propertiesZones;
-    public int numIterationsPerFrame;
-    public Vector3[] WindForces;
-    public float WindRandomnes = 0.0f;
+    public List<PropertiesDefineZone> propertiesZones;
+    public int iterationsPerFrame;
+    public Vector3[] windForces;
+    public float windRand = 0.0f;
     #endregion
+    public int totalNodes = 0;
 
     public enum Integration
     {
-        Explicit = 0,
-        Symplectic = 1,
+        EXPLICIT = 0,
+        SYMPLECTIC = 1,
     };
 
-    /// <summary>
-    /// Default constructor. Zero all. 
-    /// </summary>
     public PhysicsManager()
     {
-        Paused = true;
-        TimeStep = 0.01f;
-        Gravity = new Vector3(0.0f, -9.81f, 0.0f);
-        IntegrationMethod = Integration.Explicit;
-        numIterationsPerFrame = 1;
+        paused = true;
+        deltaTime = 0.01f;
+        gravity = new Vector3(0.0f, -9.81f, 0.0f);
+        integrationMethod = Integration.EXPLICIT;
+        iterationsPerFrame = 1;
     }
 
     #region MonoBehaviour
 
     public void Start()
     {
-        foreach (propertiesDefineZone propertiesZone in propertiesZones)
+        foreach (PropertiesDefineZone propertiesZone in propertiesZones)
         {
             propertiesZone.initialize();
         }
@@ -60,7 +53,7 @@ public class PhysicsManager : MonoBehaviour
     public void Update()
     {
         if (Input.GetKeyUp(KeyCode.P))
-            Paused = !Paused;
+            paused = !paused;
         foreach (SimulatedObject simulatedObject in simulatedObjects)
         {
             simulatedObject.updateMesh();
@@ -69,19 +62,19 @@ public class PhysicsManager : MonoBehaviour
 
     public void FixedUpdate()
     {
-        if (Paused)
+        if (paused)
             return; // Not simulating
         // Select integration method
-        switch (IntegrationMethod)
+        switch (integrationMethod)
         {
-            case Integration.Explicit:
-                for (int i = 0; i < numIterationsPerFrame; i++)
+            case Integration.EXPLICIT:
+                for (int i = 0; i < iterationsPerFrame; i++)
                 {
                     stepExplicit();
                 }
                 break;
-            case Integration.Symplectic:
-                for (int i = 0; i < numIterationsPerFrame; i++)
+            case Integration.SYMPLECTIC:
+                for (int i = 0; i < iterationsPerFrame; i++)
                 {
                     stepSymplectic();
                 }
@@ -100,7 +93,7 @@ public class PhysicsManager : MonoBehaviour
     {
         foreach (SimulatedObject simulatedObject in simulatedObjects)
         {
-            simulatedObject.VertexReCalcExplicit();
+            simulatedObject.recalcVertexExplicit();
         }
     }
 
@@ -111,7 +104,7 @@ public class PhysicsManager : MonoBehaviour
     {
         foreach (SimulatedObject simulatedObject in simulatedObjects)
         {
-            simulatedObject.VertexReCalcSymplectic();
+            simulatedObject.recalcVertexSymplectic();
         }
     }
 

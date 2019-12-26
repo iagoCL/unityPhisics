@@ -3,17 +3,17 @@ using UnityEngine;
 
 public abstract class SimulatedObject : MonoBehaviour
 {
-    //This extra class makes easy had more onjects in the same scene sharing components
+    //This extra class makes easy had more objects in the same scene sharing components
 
     #region InEditorVariables
-    public float defaultDampingOfNodesRelativeToMass;
-    public float defaultDampingOfRotationRelativeToStiffnes;
-    public float defaultDampingOfProyectiveRelativeToStiffnes;
-    public bool defaultFixed;
+    public float massDamping;
+    public float rotationDamping;
+    public float relativeDamping;
+    public bool isFixed;
     public DebugDrawType debugDraw;
     #endregion
 
-    public PhysicsManager Manager;
+    public PhysicsManager physicManager;
 
     protected Mesh mesh;
     protected Node[] nodes;
@@ -22,9 +22,9 @@ public abstract class SimulatedObject : MonoBehaviour
 
     public enum DebugDrawType
     {
-        None = 0,
-        Gizmos = 1,
-        Instantiate = 2
+        NONE = 0,
+        GIZMOS = 1,
+        GAME_OBJECTS = 2
     };
 
 
@@ -38,13 +38,13 @@ public abstract class SimulatedObject : MonoBehaviour
     //Redraw debug gizmos
     void OnDrawGizmos()
     {
-        if (debugDraw == SimulatedObject.DebugDrawType.Gizmos && Application.isPlaying)
+        if (this.debugDraw == SimulatedObject.DebugDrawType.GIZMOS && Application.isPlaying)
         {
-            foreach (Node node in nodes)
+            foreach (Node node in this.nodes)
             {
                 node.debugGizmos();
             }
-            foreach (Spring spring in springs)
+            foreach (Spring spring in this.springs)
             {
                 spring.debugGizmos();
             }
@@ -52,35 +52,33 @@ public abstract class SimulatedObject : MonoBehaviour
     }
 
     //Recalc nodes forces
-    protected abstract void VertexRecalc();
+    protected abstract void recalcVertex();
 
     //Recalc nodes positions explict
-    public virtual void VertexReCalcExplicit()
+    public virtual void recalcVertexExplicit()
     {
-        VertexRecalc();
-        for (int i = 0; i < nodes.Length; i++)
+        recalcVertex();
+        for (int vertexId = 0; vertexId < this.nodes.Length; ++vertexId)
         {
-            if (!nodes[i].Fixed)
+            if (!nodes[vertexId].isFixed)
             {
-                nodes[i].Pos += nodes[i].Vel * Manager.TimeStep;
-                nodes[i].Vel += nodes[i].Force * Manager.TimeStep / nodes[i].Mass;
+                this.nodes[vertexId].position += this.nodes[vertexId].velocity * this.physicManager.deltaTime;
+                this.nodes[vertexId].velocity += this.nodes[vertexId].force * this.physicManager.deltaTime / this.nodes[vertexId].mass;
             }
         }
     }
 
     //Recalc nodes positions symplectic
-    public virtual void VertexReCalcSymplectic()
+    public virtual void recalcVertexSymplectic()
     {
-        VertexRecalc();
-        for (int i = 0; i < nodes.Length; i++)
+        recalcVertex();
+        for (int vertexId = 0; vertexId < nodes.Length; ++vertexId)
         {
-            if (!nodes[i].Fixed)
+            if (!nodes[vertexId].isFixed)
             {
-                nodes[i].Vel += nodes[i].Force * Manager.TimeStep / nodes[i].Mass;
-                nodes[i].Pos += nodes[i].Vel * Manager.TimeStep;
-                //print(i + ": mass:"+ nodes[i].Mass + " vel: " + nodes[i].Vel + " pos: " + nodes[i].Pos+ " force: "+ nodes[i].Force);
+                this.nodes[vertexId].velocity += this.nodes[vertexId].force * this.physicManager.deltaTime / this.nodes[vertexId].mass;
+                this.nodes[vertexId].position += this.nodes[vertexId].velocity * this.physicManager.deltaTime;
             }
         }
     }
-
 }

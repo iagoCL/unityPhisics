@@ -28,12 +28,10 @@ public class CollisionZoneSphere : CollisionZone
             Vector3 Force = -normal * penaltyConstant * penetration * penetration;
             //print ("PenaltyForce of:"+Force);
             return Force;
-
         }
         else
         {
             return Vector3.zero;
         }
     }
-
 }

@@ -28,10 +28,6 @@ public class sceneManager : MonoBehaviour
         {
             SceneManager.LoadScene("Scene5");
         }
-        else if (Input.GetKey("6"))
-        {
-            SceneManager.LoadScene("Scene6");
-        }
         else if (Input.GetKey("7"))
         {
             SceneManager.LoadScene("Scene7");

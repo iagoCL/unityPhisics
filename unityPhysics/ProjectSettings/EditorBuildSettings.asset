@@ -30,27 +30,27 @@ EditorBuildSettings:
     path: Assets/__Scenes/ScenaryWithPhysics.unity
     guid: a588e542fee2feb408afa1d28bbaf08a
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene1.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene1.unity
     guid: a2bd0d7af057ad54f960595f75b235d4
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene2.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene2.unity
     guid: 74907984a63e823489529bf4649fd599
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene3.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene3.unity
     guid: fbfb9dd6948ddd444ad388c0c67578ec
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene4.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene4.unity
     guid: ee4f7d2703c29554fbfaa7e972d2b4c5
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene5.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene5.unity
     guid: e3ffce2a71ad7d240a2e26cf2e3ed402
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene6.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene6.unity
     guid: ba943e7bcf3428c4db015f4d07e772e4
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene7.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene7.unity
     guid: 46074b4d78d9a5a42b2f62a4814c8c92
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/fabrics/Scene8.unity
+    path: Assets/__Scenes/physicsScenes/cloths/Scene8.unity
     guid: 3889482cd22eee749988ae9ca1758573
   m_configObjects: {}

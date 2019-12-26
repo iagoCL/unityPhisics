@@ -14,7 +14,7 @@ public class CollisionZonePlane : CollisionZone
         return calculatePenaltyForceFromVector(vectors[0] - vertexPenalty);
     }
 
-    //Initilices the bound object
+    //Initializes the bound object
     public override void initialateBound()
     {
         loadComponent();
@@ -22,7 +22,7 @@ public class CollisionZonePlane : CollisionZone
     }
 
     // Use this for initialices the planes
-    public void initialazePlane(Vector3 vector0, Vector3 vector1, Vector3 vector2, float penaltyConst, float offsetLimit)
+    public void initPlane(Vector3 vector0, Vector3 vector1, Vector3 vector2, float penaltyConst, float offsetLimit)
     {
         vectors[0] = vector0;
         vectors[1] = vector1;
@@ -32,7 +32,7 @@ public class CollisionZonePlane : CollisionZone
         recalcNormal();
     }
 
-    //Reclculates the normal of the plane
+    //Recalculates the normal of the plane
     public void recalcNormal()
     {
         normal = Vector3.Cross(vectors[0] - vectors[1], vectors[0] - vectors[2]).normalized;
@@ -68,5 +68,4 @@ public class CollisionZonePlane : CollisionZone
             }
         }
     }
-
 }

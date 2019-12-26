@@ -14,5 +14,4 @@ public abstract class CollisionZone : MonoBehaviour
 
     //Given a vertex return its penalty force
     public abstract Vector3 calculatePenaltyForce(Vector3 vertexPenalty);
-
 }

@@ -5,7 +5,7 @@ public class CollisionZoneBox : CollisionZone
     #region InEditorVariables
     #endregion
 
-    public Vector3 v0, v7;
+    public Vector3 corner0, corner7;
     public CollisionZonePlane[] planes = new CollisionZonePlane[6];
     Bounds bounds;
 
@@ -14,70 +14,68 @@ public class CollisionZoneBox : CollisionZone
     {
         bounds = this.GetComponent<BoxCollider>().bounds;
 
-        v0 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z + bounds.extents.z);
-        Vector3 v1 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z - bounds.extents.z);
-        //Vector3 v2 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z + bounds.extents.z);
-        Vector3 v3 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z - bounds.extents.z);
-        Vector3 v4 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z + bounds.extents.z);
-        //Vector3 v5 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z - bounds.extents.z);
-        Vector3 v6 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z + bounds.extents.z);
-        v7 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z - bounds.extents.z);
+        corner0 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z + bounds.extents.z);
+        Vector3 corner1 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z - bounds.extents.z);
+        //Vector3 corner2 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z + bounds.extents.z);
+        Vector3 corner3 = new Vector3(bounds.center.x + bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z - bounds.extents.z);
+        Vector3 corner4 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z + bounds.extents.z);
+        //Vector3 corner5 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y + bounds.extents.y, bounds.center.z - bounds.extents.z);
+        Vector3 corner6 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z + bounds.extents.z);
+        corner7 = new Vector3(bounds.center.x - bounds.extents.x, bounds.center.y - bounds.extents.y, bounds.center.z - bounds.extents.z);
 
         //y
-        planes[0] = createPlane(v0, v1, v4);//v5
-        planes[1] = createPlane(v3, v6, v7);//v2
+        planes[0] = createPlane(corner0, corner1, corner4);//corner5
+        planes[1] = createPlane(corner3, corner6, corner7);//corner2
         //x
-        planes[2] = createPlane(v3, v1, v0);//v2
-        planes[3] = createPlane(v7, v6, v4);//v5
+        planes[2] = createPlane(corner3, corner1, corner0);//corner2
+        planes[3] = createPlane(corner7, corner6, corner4);//corner5
         //z
-        planes[4] = createPlane(v0, v4, v6);//v2
-        planes[5] = createPlane(v1, v3, v7);//v5
-
+        planes[4] = createPlane(corner0, corner4, corner6);//corner2
+        planes[5] = createPlane(corner1, corner3, corner7);//corner5
     }
 
     //Given a vertex return its penalty force
     public override Vector3 calculatePenaltyForce(Vector3 vertexPenalty)
     {
         //Calculates only two vectors for detect all planes collisions
-        Vector3 d0 = v0 - vertexPenalty;
-        Vector3 d1 = v7 - vertexPenalty;
-        Vector3 fMax = Vector3.zero;
+        Vector3 distance0 = corner0 - vertexPenalty;
+        Vector3 distance1 = corner7 - vertexPenalty;
+        Vector3 maxForce = Vector3.zero;
 
-        for (int i = 0; i < 6; i += 2)
+        for (int planeId = 0; planeId < 6; planeId += 2)
         {
-            Vector3 f0 = planes[i].calculatePenaltyForceFromVector(d0);
-            Vector3 f1 = planes[i + 1].calculatePenaltyForceFromVector(d1);
-            if (f0.magnitude == 0.0f || f1.magnitude == 0.0f)
+            Vector3 force0 = planes[planeId].calculatePenaltyForceFromVector(distance0);
+            Vector3 force1 = planes[planeId + 1].calculatePenaltyForceFromVector(distance1);
+            if (force0.magnitude == 0.0f || force1.magnitude == 0.0f)
             {
                 return Vector3.zero;
             }
             else
             {
-                fMax += maxForce(f0, f1);
+                maxForce += this.maxForce(force0, force1);
             }
         }
-
-        return Vector3.zero - fMax;
+        return Vector3.zero - maxForce;
     }
 
     //creates one of the collision planes of the box
     private CollisionZonePlane createPlane(Vector3 v0, Vector3 v1, Vector3 v2)
     {
         CollisionZonePlane plane = gameObject.AddComponent<CollisionZonePlane>();
-        plane.initialazePlane(v0, v1, v2, penaltyConstant, offset);
+        plane.initPlane(v0, v1, v2, penaltyConstant, offset);
         return plane;
     }
 
-    //Reurns the maximum of two vectors
-    private Vector3 maxForce(Vector3 fa, Vector3 fb)
+    //Returns the maximum of two vectors
+    private Vector3 maxForce(Vector3 force0, Vector3 force1)
     {
-        if (fa.magnitude > fb.magnitude)
+        if (force0.magnitude > force1.magnitude)
         {
-            return fa;
+            return force0;
         }
         else
         {
-            return fb;
+            return force1;
         }
     }
 }

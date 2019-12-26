@@ -9,34 +9,34 @@ public class Edge : IComparable<Edge>
 
     public int id0;
     public int id1;
-    public Edge(int i1, int i2)
+    public Edge(int id0_, int id1_)
     {
-        if (i1 < i2)
+        if (id0_ < id1_)
         {//always stores the lowest in id0
-            id0 = i1;
-            id1 = i2;
+            id0 = id0_;
+            id1 = id1_;
         }
         else
         {
-            id1 = i1;
-            id0 = i2;
+            id1 = id0_;
+            id0 = id1_;
         }
     }
     //Compare methods for sorting in the dictionary
-    public int CompareTo(Edge e2)
+    public int CompareTo(Edge other)
     {
-        return Compare(this, e2);
+        return Compare(this, other);
     }
-    public int Compare(Edge e1, Edge e2)
+    public int Compare(Edge edge1, Edge edge2)
     {
-        if ((e1.id0 == e2.id0 && e1.id1 == e2.id1) || (e1.id0 == e2.id1 && e1.id1 == e2.id0))
+        if ((edge1.id0 == edge2.id0 && edge1.id1 == edge2.id1) || (edge1.id0 == edge2.id1 && edge1.id1 == edge2.id0))
         {
             return 0;
         }
-        else if ((e1.id0 - e2.id0) != 0)
-            return e1.id0 - e2.id0;
+        else if ((edge1.id0 - edge2.id0) != 0)
+            return edge1.id0 - edge2.id0;
         else
-            return e1.id1 - e2.id1;
+            return edge1.id1 - edge2.id1;
     }
 
     //DEBUG method:

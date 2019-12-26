@@ -3,58 +3,55 @@
 public class Spring
 {
     #region InEditorVariables
-    public float Stiffness;
+    public float stiffness;
     #endregion
 
-    public PhysicsManager Manager;
-    public Node nodeA;
-    public Node nodeB;
-    public float Length0;
-    public float Length;
-    public float RotationDamping;
-    public float ProyectiveDamping;
-    public Vector3 dir;
-    public Vector3 dirNorm;
+    public Node node0;
+    public Node node1;
+    public float initLength;
+    public float length;
+    public float rotationDamping;
+    public float projectiveDamping;
+    public Vector3 direction;
     public Vector3 forceFactor;
 
-    private GameObject cylender;
-    private float LengthMin;
-    private float LengthMax;
-    private float Grossor;
+    private GameObject cylinder;
+    private float lengthMin;
+    private float lengthMax;
+    private float thickness;
 
-    // Use this for initialization in fabrics (Stiffnes)
-    public Spring(Node node1, Node node2, float newStiffness, float newRotationDamping, float newProyectiveDamping, SimulatedObject.DebugDrawType debugDraw)
+    // Use this for initialization in fabrics (Stiffness)
+    public Spring(Node node0_, Node node1_, float stiffness_, float rotationDamping_, float projectiveDamping_, SimulatedObject.DebugDrawType debugDraw)
     {
-        Grossor = 0.1f;
-        CreateSpring(node1, node2, newRotationDamping, newProyectiveDamping, debugDraw);
-        Stiffness = newStiffness;
+        this.thickness = 0.1f;
+        createSpring(node0_, node1_, rotationDamping_, projectiveDamping_, debugDraw);
+        this.stiffness = stiffness_;
     }
 
-    // Use this for initialization in tetraedros (StiffnesDensity of nodes)
-    public Spring(Node node1, Node node2, float newRotationDamping, float newProyectiveDamping, SimulatedObject.DebugDrawType debugDraw)
+    // Use this for initialization in tetrahedrons (StiffnessDensity of nodes)
+    public Spring(Node node0_, Node node1_, float rotationDamping_, float projectiveDamping_, SimulatedObject.DebugDrawType debugDraw)
     {
-        Grossor = 12.5f;
-        CreateSpring(node1, node2, newRotationDamping, newProyectiveDamping, debugDraw);
-        Stiffness = (node1.Stiffnes + node2.Stiffnes) * 0.5f;
+        this.thickness = 12.5f;
+        createSpring(node0_, node1_, rotationDamping_, projectiveDamping_, debugDraw);
+        this.stiffness = (node0_.stiffness + node1_.stiffness) * 0.5f;
     }
 
-    //Auxiliar method for initialices springs in both cases
-    private void CreateSpring(Node node1, Node node2, float newRotationDamping, float newProyectiveDamping, SimulatedObject.DebugDrawType debugDraw)
+    //Auxiliary method for initialices springs in both cases
+    private void createSpring(Node node0_, Node node1_, float rotationDamping_, float projectiveDamping_, SimulatedObject.DebugDrawType debugDraw)
     {
-        nodeA = node1;
-        nodeB = node2;
-        dir = nodeA.Pos - nodeB.Pos;
-        dirNorm = dir.normalized;
-        Length0 = Length = dir.magnitude;
-        LengthMin = 0.3f * Length0;
-        LengthMax = 3.0f * Length0;
+        this.node0 = node0_;
+        this.node1 = node1_;
+        this.direction = this.node0.position - this.node1.position;
+        this.initLength = this.length = this.direction.magnitude;
+        this.lengthMin = 0.3f * this.initLength;
+        this.lengthMax = 3.0f * this.initLength;
+        this.rotationDamping = rotationDamping_;
+        this.projectiveDamping = projectiveDamping_;
 
-        RotationDamping = newRotationDamping;
-        ProyectiveDamping = newProyectiveDamping;
-        if (debugDraw == SimulatedObject.DebugDrawType.Instantiate)
-        {//If necessary, creates the debug cylinder
-            cylender = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            cylender.name = "Spring: " + nodeA.Pos + " - " + nodeB.Pos;
+        if (debugDraw == SimulatedObject.DebugDrawType.GAME_OBJECTS)//If necessary, creates the debug cylinder
+        {
+            this.cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
+            this.cylinder.name = "Spring-" + this.node0.nodeId.ToString("00000") + "-" + this.node1.nodeId.ToString("00000");
             debugDrawing();
         }
     }
@@ -62,67 +59,65 @@ public class Spring
     //Updates the debug cylinder
     public void debugDrawing()
     {
-        cylender.transform.position = 0.5f * (nodeA.Pos + nodeB.Pos);
-        cylender.transform.localScale = new Vector3(Grossor, Length * 0.5f, Grossor);//The default length of a cylinder in Unity is 2.0
-        cylender.transform.rotation = Quaternion.FromToRotation(Vector3.up, dirNorm);
+        this.cylinder.transform.position = 0.5f * (this.node0.position + this.node1.position);
+        this.cylinder.transform.localScale = new Vector3(this.thickness, this.length * 0.5f, this.thickness);//The default length of a cylinder in Unity is 2.0
+        this.cylinder.transform.rotation = Quaternion.FromToRotation(Vector3.up, this.direction.normalized);
     }
 
     //Creates the debug gizmos
     public void debugGizmos()
     {
-        Gizmos.DrawLine(nodeA.Pos, nodeB.Pos);
+        Gizmos.DrawLine(this.node0.position, this.node1.position);
     }
 
     //Compute deformative forces and damping in 1D spring
-    public void ComputeForces()
+    public void computeForces()
     {
         calculateLength();
-        Vector3 velDifference = nodeA.Vel - nodeB.Vel;
-        Vector3 Force = Stiffness * ((Length0 - Length) * dirNorm - RotationDamping * velDifference - ProyectiveDamping * Vector3.Dot(dirNorm, velDifference) * dirNorm);
-        nodeA.Force += Force;
-        nodeB.Force -= Force;
+        Vector3 velDifference = this.node0.velocity - this.node1.velocity;
+        Vector3 force = stiffness * ((this.initLength - this.length) * this.direction.normalized - this.rotationDamping * velDifference - this.projectiveDamping * Vector3.Dot(this.direction.normalized, velDifference) * this.direction.normalized);
+        node0.force += force;
+        node1.force -= force;
     }
 
     //Compute deformative forces in 1D spring
     public void computeForceFactor()
     {
-        forceFactor = (Length0 - Length) * dir * Stiffness / (6 * Length0 * Length0 * Length);
+        this.forceFactor = (this.initLength - this.length) * this.direction * this.stiffness / (6 * this.initLength * this.initLength * this.length);
     }
 
-    //Compute deformative forces in springs of volume tetraedros
+    //Compute deformative forces in springs of volumetric tetrahedrons
     public void addForces(float volume)
     {
-        Vector3 Force = volume * forceFactor;
-        nodeA.Force += Force;
-        nodeB.Force -= Force;
+        Vector3 force = volume * forceFactor;
+        this.node0.force += force;
+        this.node1.force -= force;
     }
 
     //Compute Damping forces
-    public void ComputeDamping()
+    public void computeDamping()
     {
-        Vector3 velDifference = nodeA.Vel - nodeB.Vel;
-        Vector3 Force = Stiffness * (RotationDamping * velDifference + ProyectiveDamping * Vector3.Dot(dirNorm, velDifference) * dirNorm);
-        nodeA.Force -= Force;
-        nodeB.Force += Force;
+        Vector3 velDifference = this.node0.velocity - this.node1.velocity;
+        Vector3 force = this.stiffness * (this.rotationDamping * velDifference + this.projectiveDamping * Vector3.Dot(this.direction.normalized, velDifference) * this.direction.normalized);
+        this.node0.force -= force;
+        this.node1.force += force;
     }
 
     //Recalculate spring Length
     public void calculateLength()
     {
-        dir = nodeA.Pos - nodeB.Pos;
-        Length = dir.magnitude;
-        dirNorm = dir.normalized;
+        this.direction = this.node0.position - this.node1.position;
+        this.length = this.direction.magnitude;
         //Sets a range of values to avoid problems
-        if (Length < LengthMin)
+        if (this.length < this.lengthMin)
         {
-            dir = dirNorm * LengthMin;
-            Length = LengthMin;
+            this.direction = this.direction.normalized * this.lengthMin;
+            this.length = this.lengthMin;
         }
-        else if (Length > LengthMax)
+        else if (this.length > this.lengthMax)
         {
-            dir = dirNorm * LengthMax;
-            Length = LengthMax;
+            this.direction = this.direction.normalized * this.lengthMax;
+            this.length = this.lengthMax;
         }
     }
-
 }
