@@ -7,8 +7,8 @@ public class Edge : IComparable<Edge>
     #region InEditorVariables
     #endregion
 
-    public int id0;
-    public int id1;
+    private int id0;
+    private int id1;
     public Edge(int id0_, int id1_)
     {
         if (id0_ < id1_)
@@ -39,9 +39,14 @@ public class Edge : IComparable<Edge>
             return edge1.id1 - edge2.id1;
     }
 
-    //DEBUG method:
     public override string ToString()
     {
         return ("Edge: {id0: " + id0 + " id1: " + id1 + "}");
+    }
+    public int getId0(){
+        return this.id0;
+    }
+    public int getId1(){
+        return this.id1;
     }
 }

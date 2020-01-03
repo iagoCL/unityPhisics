@@ -5,8 +5,8 @@ public abstract class CollisionZone : MonoBehaviour
     //Abstract Class For Plane, Box and Sphere collisionZone
 
     #region InEditorVariables
-    public float penaltyConstant;
-    public float offset;
+    [SerializeField] protected  float penaltyConstant;
+    [SerializeField] protected  float offset;
     #endregion
 
     //Initialices box bound

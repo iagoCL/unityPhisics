@@ -6,14 +6,14 @@ public class Spring
     public float stiffness;
     #endregion
 
-    public Node node0;
-    public Node node1;
-    public float initLength;
-    public float length;
-    public float rotationDamping;
-    public float projectiveDamping;
-    public Vector3 direction;
-    public Vector3 forceFactor;
+    private Node node0;
+    private Node node1;
+    [SerializeField] private float initLength;
+    [SerializeField] private float length;
+    [SerializeField] private float rotationDamping;
+    [SerializeField] private float projectiveDamping;
+    [SerializeField] private Vector3 direction;
+    [SerializeField] private Vector3 forceFactor;
 
     private GameObject cylinder;
     private float lengthMin;
@@ -33,7 +33,7 @@ public class Spring
     {
         this.thickness = 12.5f;
         createSpring(node0_, node1_, rotationDamping_, projectiveDamping_, debugDraw);
-        this.stiffness = (node0_.stiffness + node1_.stiffness) * 0.5f;
+        this.stiffness = (node0_.getStiffness() + node1_.getStiffness()) * 0.5f;
     }
 
     //Auxiliary method for initialices springs in both cases
@@ -41,7 +41,7 @@ public class Spring
     {
         this.node0 = node0_;
         this.node1 = node1_;
-        this.direction = this.node0.position - this.node1.position;
+        this.direction = this.node0.getPos() - this.node1.getPos();
         this.initLength = this.length = this.direction.magnitude;
         this.lengthMin = 0.3f * this.initLength;
         this.lengthMax = 3.0f * this.initLength;
@@ -51,7 +51,7 @@ public class Spring
         if (debugDraw == SimulatedObject.DebugDrawType.GAME_OBJECTS)//If necessary, creates the debug cylinder
         {
             this.cylinder = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            this.cylinder.name = "Spring-" + this.node0.nodeId.ToString("00000") + "-" + this.node1.nodeId.ToString("00000");
+            this.cylinder.name = "Spring-" + this.node0.getStringId() + "-" + this.node1.getStringId();
             debugDrawing();
         }
     }
@@ -59,7 +59,7 @@ public class Spring
     //Updates the debug cylinder
     public void debugDrawing()
     {
-        this.cylinder.transform.position = 0.5f * (this.node0.position + this.node1.position);
+        this.cylinder.transform.position = 0.5f * (this.node0.getPos() + this.node1.getPos());
         this.cylinder.transform.localScale = new Vector3(this.thickness, this.length * 0.5f, this.thickness);//The default length of a cylinder in Unity is 2.0
         this.cylinder.transform.rotation = Quaternion.FromToRotation(Vector3.up, this.direction.normalized);
     }
@@ -67,17 +67,17 @@ public class Spring
     //Creates the debug gizmos
     public void debugGizmos()
     {
-        Gizmos.DrawLine(this.node0.position, this.node1.position);
+        Gizmos.DrawLine(this.node0.getPos(), this.node1.getPos());
     }
 
     //Compute deformative forces and damping in 1D spring
     public void computeForces()
     {
         calculateLength();
-        Vector3 velDifference = this.node0.velocity - this.node1.velocity;
+        Vector3 velDifference = this.node0.getVelocity() - this.node1.getVelocity();
         Vector3 force = stiffness * ((this.initLength - this.length) * this.direction.normalized - this.rotationDamping * velDifference - this.projectiveDamping * Vector3.Dot(this.direction.normalized, velDifference) * this.direction.normalized);
-        node0.force += force;
-        node1.force -= force;
+        this.node0.addForce(force);
+        this.node1.addForce(-force);
     }
 
     //Compute deformative forces in 1D spring
@@ -90,23 +90,23 @@ public class Spring
     public void addForces(float volume)
     {
         Vector3 force = volume * forceFactor;
-        this.node0.force += force;
-        this.node1.force -= force;
+        this.node0.addForce(force);
+        this.node1.addForce(-force);
     }
 
     //Compute Damping forces
     public void computeDamping()
     {
-        Vector3 velDifference = this.node0.velocity - this.node1.velocity;
+        Vector3 velDifference = this.node0.getVelocity() - this.node1.getVelocity();
         Vector3 force = this.stiffness * (this.rotationDamping * velDifference + this.projectiveDamping * Vector3.Dot(this.direction.normalized, velDifference) * this.direction.normalized);
-        this.node0.force -= force;
-        this.node1.force += force;
+        this.node0.addForce(-force);
+        this.node1.addForce(force);
     }
 
     //Recalculate spring Length
     public void calculateLength()
     {
-        this.direction = this.node0.position - this.node1.position;
+        this.direction = this.node0.getPos() - this.node1.getPos();
         this.length = this.direction.magnitude;
         //Sets a range of values to avoid problems
         if (this.length < this.lengthMin)
@@ -119,5 +119,9 @@ public class Spring
             this.direction = this.direction.normalized * this.lengthMax;
             this.length = this.lengthMax;
         }
+    }
+
+    public Vector3 getDirection(){
+        return this.direction;
     }
 }

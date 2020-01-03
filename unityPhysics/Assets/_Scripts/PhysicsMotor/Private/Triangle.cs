@@ -6,20 +6,23 @@ public class Triangle
     #region InEditorVariables
     #endregion
 
-    public Node[] nodes = new Node[3];
-    public Spring[] springs = new Spring[3];
+    private Node[] nodes;
+    private Spring[] springs;
 
-    public Triangle() { }
+    public Triangle(Node[] nodes_, Spring[] springs_)
+    {
+        this.nodes = nodes_;
+        this.springs = springs_;
+    }
 
     //Applies the corresponding wind force to all the nodes of the triangle
     public void computeWindForce(Vector3 windSpeed)
     {
-        Vector3 triangleSurface = Vector3.Cross(this.springs[0].direction, this.springs[1].direction);//*0.5
-        Vector3 force = Vector3.Cross(Vector3.Cross(windSpeed, triangleSurface), triangleSurface.normalized) / 6.0f;
+        Vector3 triangleSurface = Vector3.Cross(this.springs[0].getDirection(), this.springs[1].getDirection());//*0.5
+        Vector3 force = Vector3.Cross(-Vector3.Cross(windSpeed, triangleSurface), windSpeed) / 4.0f;
         foreach (Node node in this.nodes)
         {
-            //Wind_Force = Wind_Speed * Triangle_Normal * Triangle_Surface * Wind_Intensity * Triangle_Normal * Velocity_Magnitude.
-            node.force += force * Mathf.Min(node.velocity.magnitude, 2.0f);
+            node.addForce(force);
         }
     }
 }

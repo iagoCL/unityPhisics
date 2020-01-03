@@ -24,7 +24,7 @@ public class PhysicVertex
         Vector3 newPos = Vector3.zero;
         for (int nodeId = 0; nodeId < 4; nodeId++)
         {
-            newPos += this.weights[nodeId] * this.nodes[nodeId].position;
+            newPos += this.weights[nodeId] * this.nodes[nodeId].getPos();
         }
         return newPos;
     }
@@ -34,5 +34,14 @@ public class PhysicVertex
     {
         this.weights[nodeId] = newWeight;
         this.nodes[nodeId] = node;
+    }
+
+    public override string ToString()
+    {
+        string returnString = "PhysicVertex: { ";
+        for (int i = 0; i < 4; ++i){
+            returnString += " node: " + this.nodes[i] + " weight: " + this.weights[i]; 
+            }
+            return returnString +"}";
     }
 }

@@ -5,8 +5,8 @@ public class CollisionZonePlane : CollisionZone
     #region InEditorVariables
     #endregion
 
-    public Vector3[] vectors = new Vector3[3];
-    public Vector3 normal;
+    [SerializeField] private Vector3[] vectors = new Vector3[3];
+    [SerializeField] private Vector3 normal;
 
     //Return the penalty force given a vertex
     public override Vector3 calculatePenaltyForce(Vector3 vertexPenalty)

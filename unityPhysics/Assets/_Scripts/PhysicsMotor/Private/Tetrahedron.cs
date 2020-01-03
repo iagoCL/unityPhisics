@@ -7,34 +7,36 @@ public class Tetrahedron
     #region InEditorVariables
     #endregion
 
-    public Node[] nodes = new Node[4];
-    public Spring[] springs = new Spring[6];
+    private Node[] nodes = new Node[4];
     /*
      * Spring order:
-     * 0 - 1
-     * 0 - 2
-     * 0 - 3
-     * 1 - 2
-     * 1 - 3
-     * 2 - 3
+     * 0: 0 - 1
+     * 1: 0 - 2
+     * 2: 0 - 3
+     * 3: 1 - 2
+     * 4: 1 - 3
+     * 5: 2 - 3
      */
+    private Spring[] springs = new Spring[6];
 
     private GameObject tetrahedron;
     private Mesh tetrahedronMesh;
     private Vector3[] initialNormals;
+    private Vector3[] initialNodesPositions;
+    private Vector3[] initialSpringsLengths;
     private float[] initialPositions;
     private float volume;
     private Vector3[] vertices = new Vector3[4];
 
-    public Tetrahedron() { }
-
     //Initialices the tetrahedron
-    public void initData(TetrahedronObject.DebugTetrahedronsType debugDrawing)
+    public Tetrahedron(Node[] nodes_, Spring[] springs_, TetrahedronObject.DebugTetrahedronsType debugDrawing)
     {
+        this.nodes = nodes_;
+        this.springs = springs_;
         if (debugDrawing == TetrahedronObject.DebugTetrahedronsType.COMPLETE)
         {//Creates the object to debug draw it 
             this.tetrahedron = GameObject.CreatePrimitive(PrimitiveType.Quad);
-            this.tetrahedron.name = ("Tetrahedron: { " + this.nodes[0].position.ToString("00000") + " - " + this.nodes[1].position.ToString("00000") + " - " + this.nodes[2].position.ToString("00000") + " - " + this.nodes[3].position.ToString("00000") + " }");
+            this.tetrahedron.name = ("Tetrahedron: { " + this.nodes[0].getStringId() + " - " + this.nodes[1].getStringId() + " - " + this.nodes[2].getStringId() + " - " + this.nodes[3].getStringId() + " }");
             this.tetrahedronMesh = new Mesh();
 
             this.tetrahedron.GetComponent<MeshFilter>().mesh = this.tetrahedronMesh;
@@ -42,35 +44,24 @@ public class Tetrahedron
 
             for (int vertexId = 0; vertexId < 4; ++vertexId)
             {
-                this.vertices[vertexId] = this.nodes[vertexId].position;
+                this.vertices[vertexId] = this.nodes[vertexId].getPos();
             }
             this.tetrahedronMesh.vertices = this.vertices;
 
-            int[] facesVertices = new int[12];
-
-            facesVertices[0] = 0;
-            facesVertices[1] = 2;
-            facesVertices[2] = 1;
-
-            facesVertices[3] = 2;
-            facesVertices[4] = 3;
-            facesVertices[5] = 1;
-
-            facesVertices[6] = 0;
-            facesVertices[7] = 3;
-            facesVertices[8] = 2;
-
-            facesVertices[9] = 0;
-            facesVertices[10] = 1;
-            facesVertices[11] = 3;
+            int[] facesVertices = {
+                0, 2, 1,
+                2, 3, 1,
+                0, 3, 2,
+                0, 1, 3};
 
 
             this.tetrahedronMesh.triangles = facesVertices;
-
             this.tetrahedronMesh.RecalculateBounds();
             this.tetrahedronMesh.RecalculateNormals();
             this.tetrahedronMesh.RecalculateTangents();
         }
+        this.initialSpringsLengths = new Vector3[] { this.springs[0].getDirection(), this.springs[1].getDirection(), this.springs[2].getDirection() };
+        this.initialNodesPositions = new Vector3[] { this.nodes[0].getPos(), this.nodes[1].getPos(), this.nodes[2].getPos(), this.nodes[3].getPos() };
 
         //Initialices values used to weight vertex
         reCalculateVolume();
@@ -78,9 +69,9 @@ public class Tetrahedron
         this.initialPositions = new float[4];
         for (int vertexId = 0; vertexId < 4; ++vertexId)
         {
-            this.initialNormals[vertexId] = Vector3.Cross(this.nodes[(vertexId + 1) % 4].position - this.nodes[vertexId].position, this.nodes[(vertexId + 2) % 4].position - this.nodes[vertexId].position);
-            this.initialPositions[vertexId] = Vector3.Dot(this.initialNormals[vertexId], this.nodes[(vertexId + 3) % 4].position - this.nodes[vertexId].position);
-            this.nodes[vertexId].mass += this.nodes[vertexId].density * this.volume * 0.25f;
+            this.initialNormals[vertexId] = Vector3.Cross(this.initialNodesPositions[(vertexId + 1) % 4] - this.initialNodesPositions[vertexId], this.initialNodesPositions[(vertexId + 2) % 4] - this.initialNodesPositions[vertexId]);
+            this.initialPositions[vertexId] = Vector3.Dot(this.initialNormals[vertexId], this.initialNodesPositions[(vertexId + 3) % 4] - this.initialNodesPositions[vertexId]);
+            this.nodes[vertexId].addMassFromVolume( this.volume * 0.25f);
         }
     }
 
@@ -89,7 +80,7 @@ public class Tetrahedron
     {
         for (int vertexId = 0; vertexId < 4; vertexId++)
         {
-            this.vertices[vertexId] = this.nodes[vertexId].position;
+            this.vertices[vertexId] = this.nodes[vertexId].getPos();
         }
         this.tetrahedronMesh.vertices = this.vertices;
         this.tetrahedronMesh.RecalculateBounds();
@@ -101,11 +92,10 @@ public class Tetrahedron
     //If contained in the tetrahedron return a weighted vertex, else return null
     public PhysicVertex containedPoint(Vector3 point)
     {
-
         Vector3[] tetrahedronLengths = new Vector3[4];
-        for (int vertexId = 0; vertexId < 4; vertexId++)
+        for (int vertexId = 0; vertexId < 4; ++vertexId)
         {
-            tetrahedronLengths[vertexId] = point - this.nodes[vertexId].position;
+            tetrahedronLengths[vertexId] = point-this.nodes[vertexId].getPos();
             if (Mathf.Sign(Vector3.Dot(this.initialNormals[vertexId], tetrahedronLengths[vertexId])) != Mathf.Sign(this.initialPositions[vertexId]))
             {
                 return null;
@@ -113,10 +103,11 @@ public class Tetrahedron
         }
         PhysicVertex personalVertex = new PhysicVertex();
 
-        personalVertex.setWeight(0, calculateVolume(-tetrahedronLengths[1], -tetrahedronLengths[2], -tetrahedronLengths[3]) / this.volume, this.nodes[0]);
-        personalVertex.setWeight(1, calculateVolume(tetrahedronLengths[0], this.springs[1].direction, this.springs[2].direction) / this.volume, this.nodes[1]);
-        personalVertex.setWeight(2, calculateVolume(this.springs[0].direction, tetrahedronLengths[0], this.springs[2].direction) / this.volume, this.nodes[2]);
-        personalVertex.setWeight(3, calculateVolume(this.springs[0].direction, this.springs[1].direction, tetrahedronLengths[0]) / this.volume, this.nodes[3]);
+
+        personalVertex.setWeight(0, calculateVolume(tetrahedronLengths[1], tetrahedronLengths[2], tetrahedronLengths[3]) / this.volume, this.nodes[0]);
+        personalVertex.setWeight(1, calculateVolume(tetrahedronLengths[0], tetrahedronLengths[2], tetrahedronLengths[3]) / this.volume, this.nodes[1]);
+        personalVertex.setWeight(2, calculateVolume(tetrahedronLengths[0], tetrahedronLengths[1], tetrahedronLengths[3]) / this.volume, this.nodes[2]);
+        personalVertex.setWeight(3, calculateVolume(tetrahedronLengths[0], tetrahedronLengths[1], tetrahedronLengths[2]) / this.volume, this.nodes[3]);
 
         return personalVertex;
     }
@@ -130,7 +121,7 @@ public class Tetrahedron
     //Recalculate the tetrahedron volume
     private void reCalculateVolume()
     {
-        this.volume = calculateVolume(this.springs[0].direction, this.springs[1].direction, this.springs[2].direction);
+        this.volume = calculateVolume(this.springs[0].getDirection(), this.springs[1].getDirection(), this.springs[2].getDirection());
     }
 
     //Apply the corresponding deformity forces to each tetrahedron

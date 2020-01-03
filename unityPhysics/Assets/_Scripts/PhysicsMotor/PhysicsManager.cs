@@ -4,18 +4,17 @@ using System.Collections.Generic;
 public class PhysicsManager : MonoBehaviour
 {
     #region InEditorVariables
-    public bool paused;
-    public float deltaTime;
-    public Vector3 gravity;
-    public Integration integrationMethod;
-    public List<SimulatedObject> simulatedObjects;
-    public List<CollisionZone> collisionZones;
-    public List<PropertiesDefineZone> propertiesZones;
-    public int iterationsPerFrame;
-    public Vector3[] windForces;
-    public float windRand = 0.0f;
+    [SerializeField] private bool paused;
+    [SerializeField] private float deltaTime;
+    [SerializeField] private Vector3 gravity;
+    [SerializeField] private Integration integrationMethod;
+    [SerializeField] private List<SimulatedObject> simulatedObjects;
+    [SerializeField] private List<CollisionZone> collisionZones;
+    [SerializeField] private List<PropertiesDefineZone> propertiesZones;
+    [SerializeField] private List<WindForce> windForces;
+    [SerializeField] private int iterationsPerFrame;
     #endregion
-    public int totalNodes = 0;
+    private int totalNodes = 0;
 
     public enum Integration
     {
@@ -48,34 +47,47 @@ public class PhysicsManager : MonoBehaviour
         {
             simulatedObject.loadData(this);
         }
+        foreach (WindForce windForce in windForces)
+        {
+            windForce.initialize();
+        }
     }
 
     public void Update()
     {
         if (Input.GetKeyUp(KeyCode.P))
-            paused = !paused;
-        foreach (SimulatedObject simulatedObject in simulatedObjects)
         {
-            simulatedObject.updateMesh();
+            paused = !paused;
+        }
+        if (!paused)
+        {
+            foreach (SimulatedObject simulatedObject in simulatedObjects)
+            {
+                simulatedObject.updateMesh();
+            }
         }
     }
 
     public void FixedUpdate()
     {
         if (paused)
+        {
             return; // Not simulating
+        }
         // Select integration method
         switch (integrationMethod)
         {
             case Integration.EXPLICIT:
                 for (int i = 0; i < iterationsPerFrame; i++)
                 {
+                    updateWindForces();
                     stepExplicit();
                 }
                 break;
             case Integration.SYMPLECTIC:
                 for (int i = 0; i < iterationsPerFrame; i++)
                 {
+                    updateWindForces();
                     stepSymplectic();
                 }
                 break;
@@ -108,4 +120,39 @@ public class PhysicsManager : MonoBehaviour
         }
     }
 
+    private void updateWindForces()
+    {
+        foreach (WindForce windForce in windForces)
+        {
+            windForce.updateRandomForce(this.deltaTime);
+        }
+    }
+
+    public int getNewNodeId()
+    {
+        return (++this.totalNodes);
+    }
+
+    public float getDeltaTime()
+    {
+        return this.deltaTime;
+    }
+
+    public Vector3 getGravity()
+    {
+        return this.gravity;
+    }
+
+    public List<CollisionZone> getCollisionsZones()
+    {
+        return this.collisionZones;
+    }
+    public List<PropertiesDefineZone> getPropertiesZones()
+    {
+        return this.propertiesZones;
+    }
+    public List<WindForce> getWindForces()
+    {
+        return this.windForces;
+    }
 }

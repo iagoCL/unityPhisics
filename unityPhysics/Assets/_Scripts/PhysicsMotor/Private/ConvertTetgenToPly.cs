@@ -8,9 +8,9 @@ public class ConvertTetgenToPly : MonoBehaviour
     //Class that convert a .face and .node to a .ply to be able of being read by 3ds max to set colors
 
 #region InEditorVariables
-    public TextAsset nodeText;
-    public TextAsset facesText;
-    public TextAsset outputText;
+    [SerializeField] private TextAsset nodeText;
+    [SerializeField] private TextAsset facesText;
+    [SerializeField] private TextAsset outputText;
 #endregion
 
     private float[] nodesPos;

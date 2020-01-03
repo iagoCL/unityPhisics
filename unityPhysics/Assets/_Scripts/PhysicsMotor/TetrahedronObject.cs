@@ -5,20 +5,20 @@ using UnityEngine;
 public class TetrahedronObject : SimulatedObject
 {
     #region InEditorVariables
-    public TextAsset nodeText;
-    public TextAsset elementText;
-    public TextAsset faceText;
-    public DebugTetrahedronsType debugTetrahedrons;
-    public ObtainProperties readPropertiesFrom;
+    [SerializeField] private TextAsset nodeText;
+    [SerializeField] private TextAsset elementText;
+    [SerializeField] private TextAsset faceText;
+    [SerializeField] private DebugTetrahedronsType debugTetrahedrons;
+    [SerializeField] private ObtainProperties readPropertiesFrom;
 
-    public float stiffnessDensity;
-    public float massDensity;
+    [SerializeField] private float stiffnessDensity;
+    [SerializeField] private float massDensity;
     #endregion
 
     private Tetrahedron[] tetrahedrons;
     private Triangle[] triangles;
     private Mesh tetrahedronMesh;
-    private PhysicVertex[] verticesPersonal;
+    private PhysicVertex[] personalVertices;
 
     public enum DebugTetrahedronsType
     {
@@ -64,14 +64,11 @@ public class TetrahedronObject : SimulatedObject
                     float nodeStiffness = this.stiffnessDensity;
                     if (readPropertiesFrom == ObtainProperties.PROPERTIES_ZONES)
                     {//obtain values from properties zones
-                        foreach (PropertiesDefineZone propertiesZone in physicManager.propertiesZones)
+                        foreach (PropertiesDefineZone propertiesZone in this.physicManager.getPropertiesZones())
                         {//checks if the node its in a propertiesDefineZone				
-                            if (propertiesZone.bound.Contains(nodePos))
+                            if (propertiesZone.contains(nodePos))
                             {
-                                nodeIsFixed = propertiesZone.isFixed;
-                                nodeDensity = propertiesZone.mass;
-                                nodeDamping = propertiesZone.massDamping;
-                                nodeStiffness = propertiesZone.stiffness;
+                                propertiesZone.getTetrahedronValues(ref nodeIsFixed, ref nodeDensity, ref nodeDamping, ref nodeStiffness);
                                 break;
                             }
                         }
@@ -106,7 +103,7 @@ public class TetrahedronObject : SimulatedObject
         SortedDictionary<Edge, Spring> mapEdges = new SortedDictionary<Edge, Spring>();
 
         //Parse and initialices triangles faces (if necessary)
-        if (debugTetrahedrons == DebugTetrahedronsType.TRIANGLE_MESH || this.physicManager.windForces.Length > 0)
+        if (debugTetrahedrons == DebugTetrahedronsType.TRIANGLE_MESH || this.physicManager.getWindForces().Count > 0)
         {
             lines = Regex.Split(this.faceText.text, "\\s*\\n+\\s*");
             elements = Regex.Split(lines[0], "\\s+");
@@ -122,19 +119,21 @@ public class TetrahedronObject : SimulatedObject
                     {//correct number of attributes
                         int actualIndex = System.Int32.Parse(elements[0]);
                         int actualIndexTriple = actualIndex * 3;
-                        Triangle actualTriangle = new Triangle();
+
+                        Node[] triangleNodes = new Node[3];
                         for (int indexId = 0; indexId < 3; ++indexId)
                         {//each line element
                             trianglesIndexes[actualIndexTriple + indexId] = System.Int32.Parse(elements[3 - indexId]);
-                            actualTriangle.nodes[indexId] = this.nodes[trianglesIndexes[indexId]];
+                            triangleNodes[indexId] = this.nodes[trianglesIndexes[indexId]];
                         }
+                        Spring[] triangleSprings = {
+                            assignSpring(trianglesIndexes[actualIndexTriple], trianglesIndexes[actualIndexTriple + 1], mapEdges),
+                            assignSpring(trianglesIndexes[actualIndexTriple], trianglesIndexes[actualIndexTriple + 2], mapEdges),
+                            assignSpring(trianglesIndexes[actualIndexTriple + 1], trianglesIndexes[actualIndexTriple + 2], mapEdges)
+                        };
 
-                        //assign the springs to the triangle; assignSpring avoids duplicates
-                        actualTriangle.springs[0] = assignSpring(trianglesIndexes[actualIndexTriple], trianglesIndexes[actualIndexTriple + 1], mapEdges);
-                        actualTriangle.springs[1] = assignSpring(trianglesIndexes[actualIndexTriple], trianglesIndexes[actualIndexTriple + 2], mapEdges);
-                        actualTriangle.springs[2] = assignSpring(trianglesIndexes[actualIndexTriple + 1], trianglesIndexes[actualIndexTriple + 2], mapEdges);
                         //Assign the new triangle
-                        triangles[actualIndex] = actualTriangle;
+                        triangles[actualIndex] = new Triangle(triangleNodes, triangleSprings);
                     }
                     else
                     {
@@ -152,7 +151,7 @@ public class TetrahedronObject : SimulatedObject
                 Vector3[] trianglesVertices = new Vector3[this.nodes.Length];
                 for (int i = 0; i < this.nodes.Length; i++)
                 {
-                    trianglesVertices[i] = this.nodes[i].position;
+                    trianglesVertices[i] = this.nodes[i].getPos();
                 }
                 this.tetrahedronMesh.vertices = trianglesVertices;
                 this.tetrahedronMesh.triangles = trianglesIndexes;
@@ -179,18 +178,18 @@ public class TetrahedronObject : SimulatedObject
                         tetrahedronVertices[elementId] = System.Int32.Parse(elements[elementId + 1]);
                     }
                     //Creates a new tetrahedron
-                    Tetrahedron actualTetrahedron = new Tetrahedron();
-                    int indice = -1;
-                    for (int elementId = 0; elementId < 4; ++elementId)
-                    {//Assign the nodes and springs to the tetrahedron
-                        actualTetrahedron.nodes[elementId] = nodes[tetrahedronVertices[elementId]];
+                    Node[] tetrahedronNodes = new Node[4];
+                    Spring[] tetrahedronSprings = new Spring[6];
+                    int index = -1;
+                    for (int elementId = 0; elementId < 4; ++elementId)//Assign the nodes and springs to the tetrahedron
+                    {
+                        tetrahedronNodes[elementId] = nodes[tetrahedronVertices[elementId]];
                         for (int vertexId = elementId + 1; vertexId < 4; ++vertexId)
                         {
-                            actualTetrahedron.springs[++indice] = assignSpring(tetrahedronVertices[elementId], tetrahedronVertices[vertexId], mapEdges);
+                            tetrahedronSprings[++index] = assignSpring(tetrahedronVertices[elementId], tetrahedronVertices[vertexId], mapEdges);
                         }
                     }
-                    actualTetrahedron.initData(debugTetrahedrons);
-                    tetrahedrons[System.Int32.Parse(elements[0])] = actualTetrahedron;
+                    tetrahedrons[System.Int32.Parse(elements[0])] = new Tetrahedron(tetrahedronNodes, tetrahedronSprings, debugTetrahedrons);
                 }
                 else
                 {
@@ -201,11 +200,11 @@ public class TetrahedronObject : SimulatedObject
 
         //initialices vertex weights
         mesh = transform.GetComponent<MeshFilter>().mesh;
-        verticesPersonal = new PhysicVertex[mesh.vertices.Length];
+        personalVertices = new PhysicVertex[mesh.vertices.Length];
         vertices = new Vector3[mesh.vertices.Length];
-        for (int i = 0; i < verticesPersonal.Length; i++)
+        for (int i = 0; i < personalVertices.Length; i++)
         {
-            verticesPersonal[i] = assignPersonalVertex(transform.TransformPoint(mesh.vertices[i]));
+            personalVertices[i] = assignPersonalVertex(transform.TransformPoint(mesh.vertices[i]));
         }
     }
 
@@ -213,22 +212,19 @@ public class TetrahedronObject : SimulatedObject
     {
         foreach (Node node in this.nodes)
         {
-            node.force = Vector3.zero;
+            node.resetForces();
             node.computeForces();
         }
-        foreach (Vector3 windForce in physicManager.windForces)
+        foreach (WindForce windForce in this.physicManager.getWindForces())
         {
-            Vector3 newWindForce = new Vector3(
-                windForce.x * Random.Range((1.0f - physicManager.windRand), (1.0f + physicManager.windRand)),
-                windForce.y * Random.Range((1.0f - physicManager.windRand), (1.0f + physicManager.windRand)),
-                windForce.z * Random.Range((1.0f - physicManager.windRand), (1.0f + physicManager.windRand)));
-            foreach (Triangle triangle in triangles)
+            Vector3 newWindForce = windForce.getActualForce();
+            foreach (Triangle triangle in this.triangles)
             {
                 triangle.computeWindForce(newWindForce);
             }
         }
 
-        foreach (Spring spring in springs)
+        foreach (Spring spring in this.springs)
         {
             spring.calculateLength();
             spring.computeForceFactor();
@@ -243,9 +239,9 @@ public class TetrahedronObject : SimulatedObject
 
     public override void updateMesh()
     {
-        for (int i = 0; i < verticesPersonal.Length; i++)
+        for (int i = 0; i < personalVertices.Length; i++)
         {
-            vertices[i] = transform.InverseTransformPoint(verticesPersonal[i].recalcPos());
+            vertices[i] = transform.InverseTransformPoint(personalVertices[i].recalcPos());
         }
         mesh.vertices = vertices;
         mesh.RecalculateBounds();
@@ -264,7 +260,7 @@ public class TetrahedronObject : SimulatedObject
             Vector3[] trianglesVertices = new Vector3[this.nodes.Length];
             for (int i = 0; i < this.nodes.Length; i++)
             {
-                trianglesVertices[i] = this.nodes[i].position;
+                trianglesVertices[i] = this.nodes[i].getPos();
             }
             tetrahedronMesh.vertices = trianglesVertices;
             tetrahedronMesh.RecalculateBounds();
@@ -278,7 +274,7 @@ public class TetrahedronObject : SimulatedObject
             {
                 node.debugDrawing();
             }
-            foreach (Spring spring in springs)
+            foreach (Spring spring in this.springs)
             {
                 spring.debugDrawing();
             }
@@ -286,20 +282,20 @@ public class TetrahedronObject : SimulatedObject
     }
 
     //return the correct spring for those vertices, avoiding duplicated springs
-    private Spring assignSpring(int verticeA, int verticeB, SortedDictionary<Edge, Spring> Edges)
+    private Spring assignSpring(int vertexA, int vertexB, SortedDictionary<Edge, Spring> edgesMap_)
     {
-        Edge edge = new Edge(verticeA, verticeB);
+        Edge edge = new Edge(vertexA, vertexB);
         Spring returnSpring;
 
-        if (Edges.ContainsKey(edge))
+        if (edgesMap_.ContainsKey(edge))
         {//checks if the edge already exist                               
-            Edges.TryGetValue(edge, out returnSpring);//obtain the actual spring
+            edgesMap_.TryGetValue(edge, out returnSpring);//obtain the actual spring
         }
         else
         {//if the edge its not cointain creates a new edge and adds it to the dictionary 
-            returnSpring = new Spring(this.nodes[edge.id0], this.nodes[edge.id1], rotationDamping, relativeDamping, debugDraw);
-            springs.Add(returnSpring);
-            Edges.Add(edge, returnSpring);
+            returnSpring = new Spring(this.nodes[edge.getId0()], this.nodes[edge.getId1()], rotationDamping, relativeDamping, debugDraw);
+            this.springs.Add(returnSpring);
+            edgesMap_.Add(edge, returnSpring);
         }
         return returnSpring;
 
@@ -308,7 +304,7 @@ public class TetrahedronObject : SimulatedObject
     //Assign a tetrahedron and nodes weights to a vertex
     private PhysicVertex assignPersonalVertex(Vector3 vertexPos)
     {
-        foreach (Tetrahedron tetrahedron in tetrahedrons)
+        foreach (Tetrahedron tetrahedron in this.tetrahedrons)
         {
 
             PhysicVertex personalVertex = tetrahedron.containedPoint(vertexPos);
@@ -317,7 +313,7 @@ public class TetrahedronObject : SimulatedObject
                 return personalVertex;
             }
         }
-        print("Error vertex: " + vertexPos + " no contenido");
+        print("Error vertex: " + vertexPos + " not contained");
         return new PhysicVertex();
     }
 

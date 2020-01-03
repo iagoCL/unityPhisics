@@ -5,19 +5,19 @@ public class Node
     #region InEditorVariables
     #endregion
 
-    public float mass;
-    public float density;
-    public float damping;
-    public float stiffness;
-    public bool isFixed;
-    public PhysicsManager physicManager;
+    [SerializeField] private float mass;
+    [SerializeField] private float density;
+    [SerializeField] private float damping;
+    [SerializeField] private float stiffness;
+    [SerializeField] private bool isFixed;
+    private PhysicsManager physicManager;
 
-    public Vector3 position;
-    public Vector3 velocity;
-    public Vector3 force;
+    [SerializeField] private Vector3 position;
+    [SerializeField] private Vector3 velocity;
+    [SerializeField] private Vector3 force;
     private GameObject sphere;
     private float sphereRadius;
-    public int nodeId;
+    [SerializeField] private int nodeId;
 
 
 
@@ -44,7 +44,7 @@ public class Node
     {
         this.position = position_;
         this.physicManager = physicsManager_;
-        this.nodeId = ++this.physicManager.totalNodes;
+        this.nodeId = this.physicManager.getNewNodeId();
         this.velocity = this.force = Vector3.zero;
         this.isFixed = isFixed_;
         this.damping = damping_;
@@ -52,7 +52,7 @@ public class Node
         {
             this.sphere = GameObject.CreatePrimitive(PrimitiveType.Sphere);
             this.sphere.transform.localScale = new Vector3(this.sphereRadius, this.sphereRadius, this.sphereRadius);
-            this.sphere.name = "node-" + this.nodeId.ToString("00000");
+            this.sphere.name = "node-" + this.getStringId();
             debugDrawing();
         }
     }
@@ -72,13 +72,51 @@ public class Node
     //Add gravity force and checks if its in a collision
     public void computeForces()
     {
-        this.force += this.mass * (this.physicManager.gravity - this.velocity * this.damping);
-        if (physicManager.collisionZones.Count > 0)
+        this.force += this.mass * (this.physicManager.getGravity() - this.velocity * this.damping);
+        foreach (CollisionZone colZone in this.physicManager.getCollisionsZones())
         {
-            foreach (CollisionZone colZone in this.physicManager.collisionZones)
-            {
-                this.force += colZone.calculatePenaltyForce(this.position);
-            }
+            this.force += colZone.calculatePenaltyForce(this.position);
         }
+    }
+
+    public void resetForces()
+    {
+        this.force = Vector3.zero;
+    }
+
+    public float getStiffness()
+    {
+        return this.stiffness;
+    }
+
+    public Vector3 getPos()
+    {
+        return this.position;
+    }
+    public Vector3 getVelocity()
+    {
+        return this.velocity;
+    }
+    public string getStringId()
+    {
+        return this.nodeId.ToString("00000");
+    }
+    public bool getFixed()
+    {
+        return this.isFixed;
+    }
+    public void addForce(Vector3 force_){
+        this.force += force_;
+    }
+    public void addMassFromVolume(float volume){
+        this.mass += this.density * volume;
+    }
+    public void updatePos()
+    {
+        this.position += this.velocity * this.physicManager.getDeltaTime();
+    }
+    public void updateVelocity()
+    {
+        this.velocity += this.force * this.physicManager.getDeltaTime() / this.mass;
     }
 }

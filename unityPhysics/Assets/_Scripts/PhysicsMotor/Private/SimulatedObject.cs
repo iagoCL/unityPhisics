@@ -6,14 +6,14 @@ public abstract class SimulatedObject : MonoBehaviour
     //This extra class makes easy had more objects in the same scene sharing components
 
     #region InEditorVariables
-    public float massDamping;
-    public float rotationDamping;
-    public float relativeDamping;
-    public bool isFixed;
-    public DebugDrawType debugDraw;
+    [SerializeField] protected float massDamping;
+    [SerializeField] protected float rotationDamping;
+    [SerializeField] protected float relativeDamping;
+    [SerializeField] protected bool isFixed;
+    [SerializeField] protected DebugDrawType debugDraw;
     #endregion
 
-    public PhysicsManager physicManager;
+    protected PhysicsManager physicManager;
 
     protected Mesh mesh;
     protected Node[] nodes;
@@ -60,10 +60,10 @@ public abstract class SimulatedObject : MonoBehaviour
         recalcVertex();
         for (int vertexId = 0; vertexId < this.nodes.Length; ++vertexId)
         {
-            if (!nodes[vertexId].isFixed)
+            if (!nodes[vertexId].getFixed())
             {
-                this.nodes[vertexId].position += this.nodes[vertexId].velocity * this.physicManager.deltaTime;
-                this.nodes[vertexId].velocity += this.nodes[vertexId].force * this.physicManager.deltaTime / this.nodes[vertexId].mass;
+                this.nodes[vertexId].updatePos();
+                this.nodes[vertexId].updateVelocity();
             }
         }
     }
@@ -74,10 +74,10 @@ public abstract class SimulatedObject : MonoBehaviour
         recalcVertex();
         for (int vertexId = 0; vertexId < nodes.Length; ++vertexId)
         {
-            if (!nodes[vertexId].isFixed)
+            if (!nodes[vertexId].getFixed())
             {
-                this.nodes[vertexId].velocity += this.nodes[vertexId].force * this.physicManager.deltaTime / this.nodes[vertexId].mass;
-                this.nodes[vertexId].position += this.nodes[vertexId].velocity * this.physicManager.deltaTime;
+                this.nodes[vertexId].updateVelocity();
+                this.nodes[vertexId].updatePos();
             }
         }
     }
