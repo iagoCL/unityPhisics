@@ -5,52 +5,31 @@ EditorBuildSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 2
   m_Scenes:
-  - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
   - enabled: 1
-    path: Assets/__Scenes/Scenef1.unity
-    guid: 8fffa1bf43c3c63469057124bb63bc84
+    path: Assets/__Scenes/tutorial.unity
+    guid: fe9da4bde44dd2b429d823489f14b152
   - enabled: 1
-    path: Assets/__Scenes/physicsScenes/solids/Scenef2.unity
-    guid: 213cab729f9b1464883d6040f56ce3ca
-  - enabled: 1
-    path: Assets/__Scenes/physicsScenes/solids/Scenef3.unity
-    guid: 04c5459b3dd694648b408aaf9f7e7700
-  - enabled: 1
-    path: Assets/__Scenes/physicsScenes/solids/Scenef4.unity
-    guid: 89e80d3ff40d8824e93865d44cfe6e5b
-  - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
-  - enabled: 0
-    path: 
-    guid: 00000000000000000000000000000000
-  - enabled: 1
-    path: 
-    guid: 00000000000000000000000000000000
-  - enabled: 1
-    path: Assets/__Scenes/Scene1.unity
+    path: Assets/__Scenes/ClothsFixersA.unity
     guid: a2bd0d7af057ad54f960595f75b235d4
   - enabled: 1
-    path: Assets/__Scenes/Scene2.unity
+    path: Assets/__Scenes/ClothsFixersB.unity
     guid: 74907984a63e823489529bf4649fd599
   - enabled: 1
-    path: Assets/__Scenes/Scene3.unity
+    path: Assets/__Scenes/ClothSphereSmall.unity
     guid: fbfb9dd6948ddd444ad388c0c67578ec
   - enabled: 1
-    path: Assets/__Scenes/Scene4.unity
+    path: Assets/__Scenes/ClothSphereLarge.unity
     guid: ee4f7d2703c29554fbfaa7e972d2b4c5
   - enabled: 1
-    path: Assets/__Scenes/Scene5.unity
+    path: Assets/__Scenes/ClothSphereLargeRotated.unity
     guid: e3ffce2a71ad7d240a2e26cf2e3ed402
   - enabled: 1
-    path: 
-    guid: 00000000000000000000000000000000
-  - enabled: 1
-    path: Assets/__Scenes/Scene7.unity
+    path: Assets/__Scenes/ClothBox.unity
     guid: 46074b4d78d9a5a42b2f62a4814c8c92
   - enabled: 1
-    path: Assets/__Scenes/Scene8.unity
+    path: Assets/__Scenes/ClothBoxes.unity
     guid: 3889482cd22eee749988ae9ca1758573
+  - enabled: 1
+    path: Assets/__Scenes/Solid.unity
+    guid: 8fffa1bf43c3c63469057124bb63bc84
   m_configObjects: {}

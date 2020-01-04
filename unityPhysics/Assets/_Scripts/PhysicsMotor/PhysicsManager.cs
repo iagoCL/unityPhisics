@@ -55,10 +55,6 @@ public class PhysicsManager : MonoBehaviour
 
     public void Update()
     {
-        if (Input.GetKeyUp(KeyCode.P))
-        {
-            paused = !paused;
-        }
         if (!paused)
         {
             foreach (SimulatedObject simulatedObject in simulatedObjects)
@@ -126,6 +122,14 @@ public class PhysicsManager : MonoBehaviour
         {
             windForce.updateRandomForce(this.deltaTime);
         }
+    }
+
+    public bool togglePaused(){
+        this.paused = !this.paused;
+        return this.paused;
+    }
+    public bool getPaused(){
+        return this.paused;
     }
 
     public int getNewNodeId()
